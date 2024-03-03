@@ -35,19 +35,23 @@ set(PCFILE "${CMAKE_CURRENT_BINARY_DIR}/Clipper2.pc")
 set(PCFILEZ "${CMAKE_CURRENT_BINARY_DIR}/Clipper2Z.pc")
 
 # 2d version of Clipper2
-add_library(Clipper2 ${CLIPPER2_INC} ${CLIPPER2_SRC})
+add_library(Clipper2 STATIC ${CLIPPER2_INC} ${CLIPPER2_SRC})
 
 target_include_directories(Clipper2
-  PUBLIC Clipper2Lib/include
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Clipper2Lib/include>
+    $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}/clipper2>
 )
 
 # Clipper2 but with USINGZ defined
-add_library(Clipper2Z ${CLIPPER2_INC} ${CLIPPER2_SRC})
+add_library(Clipper2Z STATIC ${CLIPPER2_INC} ${CLIPPER2_SRC})
 
 target_compile_definitions(Clipper2Z PUBLIC USINGZ)
 
 target_include_directories(Clipper2Z
-  PUBLIC Clipper2Lib/include
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/Clipper2Lib/include>
+    $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}/clipper2>
 )
 
 if (MSVC)
@@ -217,9 +221,31 @@ set(PCFILE_LIB_SUFFIX "Z")
 CONFIGURE_FILE(Clipper2.pc.cmakein "${PCFILEZ}" @ONLY)
 
 install(TARGETS Clipper2 Clipper2Z
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/clipper2
+  EXPORT Clipper2Targets
+  PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/clipper2
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 install(FILES ${PCFILE} ${PCFILEZ} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    Clipper2ConfigVersion.cmake
+    VERSION ${PACKAGE_VERSION}
+    COMPATIBILITY ExactVersion
+)
+
+install(EXPORT Clipper2Targets
+	FILE Clipper2Targets.cmake
+	DESTINATION ${CMAKE_INSTALL_CMAKEDIR}/Clipper2
+)
+
+configure_file(${PROJECT_SOURCE_DIR}/cmake/Config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/Clipper2Config.cmake @ONLY)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Clipper2Config.cmake"
+	"${CMAKE_CURRENT_BINARY_DIR}/Clipper2ConfigVersion.cmake"
+	DESTINATION ${CMAKE_INSTALL_CMAKEDIR}/Clipper2
+)
 
 # disable exceptions
 #string(REGEX REPLACE "/W[3|4]" "/w" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
