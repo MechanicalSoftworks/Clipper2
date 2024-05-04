@@ -11,6 +11,7 @@
 #define CLIPPER_H
 
 #include <cstdlib>
+#include <cstdint>
 #include <type_traits>
 #include <vector>
 
